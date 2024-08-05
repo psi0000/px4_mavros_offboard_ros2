@@ -30,7 +30,7 @@ chmod +x sim.sh
 
 ## Branch Overview
 
-### `base_sim` Branch
+### `base_sim Branch`
 
 This branch contains the fundamental scripts for basic drone operations.
 
@@ -41,18 +41,42 @@ These scripts are designed for single robot operations and use MAVROS for local 
 For global position commands, consider using different services and message types. Note that the drone must be in OFFBOARD mode to respond to waypoint commands. 
 If you prefer manual takeoff and landing without using AUTO modes, refer to the commented sections in `wp_patrol.py`.
 
-### Execution
 
+### `multi_sim Branch`
+
+Development for multi-robot simulation is ongoing. Stay tuned for updates!
+
+## Execution
+
+first, in host
+
+RUN, _**QGroundControl.AppImage**_
+
+second, in container
+
+```bash
+#default id =1
+cd ~/PX4-Autopilot & PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 ./build/px4_sitl_default/bin/px4 -i 1
+
+#opt - world = baylands, id=1
+cd ~/PX4-Autopilot & PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_WORLD=baylands ./build/px4_sitl_default/bin/px4 -i 1 
+
+#making px4_topic
+MicroXRCEAgent udp4 -p 8888
+
+#change px4_topic to mavros_topic
+ros2 launch mavros multi_uas.launch
+
+```
 To run the scripts, use the following commands:
 
 ```bash
 ros2 run custom start
 ros2 run custom wp_patrol
 ```
+#### - wp_patrol.py
+![Description of Image](./wp_patrol.png)
 
-### `multi_sim` Branch
-
-Development for multi-robot simulation is ongoing. Stay tuned for updates!
 
 ## Contributions
 We welcome contributions to enhance this project! If you find this project helpful, please let us know or consider contributing to its development. We appreciate every bit of support and feedback from our community!
