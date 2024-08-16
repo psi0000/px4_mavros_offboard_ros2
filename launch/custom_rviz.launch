@@ -1,0 +1,25 @@
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.substitutions import LaunchConfiguration
+
+def generate_launch_description():
+    uav_id = LaunchConfiguration('id')
+
+    # RVIZ config file with id-specific topics
+    rviz_config_file = f'/root/task_allocation/colcon_ws/src/px4_mavros_offboard_ros2/custom.rviz'
+
+    return LaunchDescription([
+        # UAV id argument
+        DeclareLaunchArgument(
+            'id',
+            default_value='1',
+            description='Instance ID for the UAV agent'
+        ),
+
+        # Execute rviz2 with the config file for the specific UAV id
+        ExecuteProcess(
+            cmd=['rviz2', '-d', rviz_config_file],
+            output='screen'
+        ),
+    ])
+

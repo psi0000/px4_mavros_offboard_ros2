@@ -10,6 +10,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', ['launch/spawn.launch']), 
+        ('share/' + package_name + '/launch', ['launch/custom_rviz.launch']), 
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -18,10 +20,11 @@ setup(
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
-    entry_points={
+    entry_points={ 
         'console_scripts': [
         	'start = custom.start:main',
-            'wp_patrol = custom.wp_patrol:main'
+            'wp_patrol = custom.wp_patrol:main',
+            'uav_agent = custom.uav_agent:main'
         ],
     },
 )

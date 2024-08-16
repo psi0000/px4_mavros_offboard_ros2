@@ -13,7 +13,7 @@ import numpy as np
 class Setpointer(Node):
 
     def __init__(self):
-        super().__init__('set_goal')
+        super().__init__('wp_patrol')
 
         # Create a QoS profile with BestEffort reliability
         qos_profile = QoSProfile(depth=10)

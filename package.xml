@@ -9,7 +9,9 @@
 
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
-
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
@@ -19,3 +21,4 @@
     <build_type>ament_python</build_type>
   </export>
 </package>
+

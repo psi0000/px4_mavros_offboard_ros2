@@ -1,0 +1,91 @@
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction, IncludeLaunchDescription, TimerAction, LogInfo
+from launch.substitutions import LaunchConfiguration, TextSubstitution, Command, PythonExpression
+from launch.launch_description_sources import AnyLaunchDescriptionSource
+from launch_ros.substitutions import FindPackageShare
+import socket
+
+def check_agent_running(context, *args, **kwargs):
+    try:
+        # 포트 8888이 사용 중인지 확인
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)  # 타임아웃 설정
+        result = sock.connect_ex(('127.0.0.1', 8888))
+        sock.close()
+
+        if result == 0:
+            return [LogInfo(msg="MicroXRCEAgent already running.")]
+        else:
+            # 포트가 사용 중이지 않으면 MicroXRCEAgent를 실행하도록 함
+            return [LogInfo(msg="Starting MicroXRCEAgent..."), ExecuteProcess(
+                cmd=['MicroXRCEAgent', 'udp4', '-p', '8888'],
+                output='screen'
+            )]
+    except Exception as e:
+        return [LogInfo(msg=f"Error checking MicroXRCEAgent status: {e}")]
+
+
+
+def generate_launch_description():
+    id = LaunchConfiguration('id')
+    # fcu_url 설정
+    #fcu_url = LaunchConfiguration('id').perform(None)
+    
+    
+         # fcu_url을 id에 따라 설정
+    fcu_url = PythonExpression([
+        "'udp://:14541@127.0.0.1:14581' if int(", id, ") == 1 else "
+        "'udp://:14542@127.0.0.1:14582' if int(", id, ") == 2 else "
+        "'udp://:14543@127.0.0.1:14583' if int(", id, ") == 3 else "
+        "'udp://:14540@127.0.0.1:14580'"
+    ])
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'id',
+            default_value='1',
+            description='Instance ID for PX4'
+        ),
+
+        OpaqueFunction(function=check_agent_running),
+
+        LogInfo(msg="\033[92mStarting PX4...\033[0m"),
+        ExecuteProcess(
+            cmd=[
+                'bash', '-c',
+                TextSubstitution(text='cd ~/PX4-Autopilot && PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="'),
+                id, 
+                '" /root/PX4-Autopilot/build/px4_sitl_default/bin/px4 -i ',
+                id,
+            ],
+            shell=True,
+            output='screen'
+        ),
+
+        LogInfo(msg="\033[92mPX4 started successfully.\033[0m"),
+
+        IncludeLaunchDescription(
+            AnyLaunchDescriptionSource([
+                FindPackageShare('mavros'), '/launch/px4.launch'
+            ]),
+            launch_arguments={
+                'fcu_url': [fcu_url],
+                'tgt_system': PythonExpression(['1 + int(', id, ')']),
+                'log_output': 'screen',
+                'namespace': ['mavros/uas_', id]
+            }.items(),
+        ),
+
+        # TimerAction to delay the launch of UAV agent
+        TimerAction(
+            period=15.0,  
+            actions=[
+                LogInfo(msg="\033[92mStarting uav_agent.py.\033[0m"), 
+                # UAV Agent 
+                ExecuteProcess(
+                    cmd=['ros2', 'run', 'custom', 'uav_agent', '--id', id],
+                    output='screen'
+                ),
+            ]
+        ),
+
+    ])
